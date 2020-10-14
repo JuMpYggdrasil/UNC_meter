@@ -4,6 +4,8 @@
 #include <ArduinoJson.h>
 #include <avr/wdt.h>
 
+#define USE_LCDI2C false
+
 #define MAX485_DE_AC      48
 #define MAX485_RE_NEG_AC  49
 #define MAX485_DE_DC      47
@@ -41,7 +43,9 @@ float powerfactor_DC[n_DcMax];
 float alarm_DC[n_DcMax];
 bool measureUpdate_DC[n_DcMax];
 
+#if USE_LCDI2C
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+#endif
 
 HardwareSerial &Serial_AC = Serial1;
 HardwareSerial &Serial_DC = Serial2;
@@ -96,11 +100,11 @@ void postTransmission_DC()
 void setup()
 {
   wdt_disable();
-  Serial.begin(57600, SERIAL_8N1);
+  Serial.begin(57600, SERIAL_8N1);// use Serial (port 0); RPI communication
   while (!Serial) continue;
   Serial_AC.begin(9600, SERIAL_8N1);// use Serial (port 1); initialize Modbus AC
   Serial_DC.begin(9600, SERIAL_8N2);// use Serial (port 2, 2 stopbits); initialize Modbus DC
-  Serial_Bluetooth.begin(9600, SERIAL_8N1);
+  Serial_Bluetooth.begin(9600, SERIAL_8N1);// use Serial (port 3); Bluetooth communication
 
   pinMode(MAX485_RE_NEG_AC, OUTPUT);
   pinMode(MAX485_DE_AC, OUTPUT);
@@ -119,11 +123,13 @@ void setup()
   //  Serial.print("set current range ");
   //  Serial.println(result);
 
+#if USE_LCDI2C
   lcd.begin();
   lcd.setCursor(0, 0);
   lcd.print("UNICORN PROJECT");
   lcd.setCursor(0, 1);
   lcd.print("EGAT");
+#endif
 
   wdt_enable(WDTO_8S);
 }
@@ -180,10 +186,12 @@ void loop()
       alarm_AC[nCntAC] = (float)recv_data[9];
       measureUpdate_AC[nCntAC] = true;
     } else {
+#if USE_LCDI2C
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print(F("node_AC[2] error"));
+      lcd.print(F("node_AC[?] error"));
     }
+#endif
   }
 
   currentMillis = millis();
@@ -217,9 +225,11 @@ void loop()
       alarm_DC[nCntDC] = (float)((unsigned int)recv_data[7] << 8 | recv_data[6]);
       measureUpdate_DC[nCntDC] = true;
     } else {
+      #if USE_LCDI2C
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print(F("node_DC[5] error"));
+      lcd.print(F("node_DC[?] error"));
+      #endif
     }
   }
 
@@ -246,11 +256,13 @@ void loop()
     
     DeserializationError error = deserializeJson(jsonDoc_recv, inputString0);
     if (error) {
+      #if USE_LCDI2C
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print(F("parseObject() failed"));
       lcd.setCursor(0, 1);
       lcd.print(error.c_str());
+      #endif
       //      if (inputString0.startsWith("h")) {
       //        Serial.println("no help");
       //      }
