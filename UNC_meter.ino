@@ -3,6 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <ArduinoJson.h>
 #include <avr/wdt.h>
+#include <EloquentNonBlocking.h>
 
 #define USE_LCDI2C false
 
