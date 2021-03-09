@@ -1,11 +1,14 @@
+#define USE_LCDI2C false
+
 #include <ModbusMaster.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 #include <ArduinoJson.h>
 #include <avr/wdt.h>
-#include <EloquentNonBlocking.h>
+//#include <EloquentNonBlocking.h>
 
-#define USE_LCDI2C false
+#if USE_LCDI2C
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#endif
 
 #define MAX485_DE_AC      48
 #define MAX485_RE_NEG_AC  49
